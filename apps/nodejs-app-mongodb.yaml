@@ -1,0 +1,25 @@
+# Child Application (app-of-apps target). Deploys the three-tier app into its own
+# namespace. The cluster's bootstrap creates an `app-of-apps` Application pointing at
+# this `apps/` directory; ArgoCD then reconciles every Application defined here.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nodejs-app-mongodb
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/DeV1L/argocd-example-apps
+    targetRevision: irrisketch-demo
+    path: nodejs-app-mongodb/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nodejs-app-mongodb
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

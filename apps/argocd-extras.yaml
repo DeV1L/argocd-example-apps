@@ -1,0 +1,21 @@
+# Child Application that exposes the ArgoCD UI via a NodePort Service (argocd namespace).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-extras
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/DeV1L/argocd-example-apps
+    targetRevision: irrisketch-demo
+    path: argocd-extras
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
