@@ -15,7 +15,7 @@ turns a Durantic machine into a single-node k3s + ArgoCD cluster and points Argo
 |------|-------|---------|-------|
 | frontend | `ghcr.io/dev1l/argocd-example-nodejs-app-mongodb:frontend` | Ingress `/` (Traefik) → `:80→8080` | Serves the UI, reverse-proxies `/api/*` to `backend` |
 | backend | `ghcr.io/dev1l/argocd-example-nodejs-app-mongodb:backend` | ClusterIP `:3000` | Renders text → PDF, stores it in MongoDB |
-| mongodb | `mongo:8.0` (upstream) | headless `:27017` | StatefulSet + `local-path` PVC (1Gi) |
+| mongodb | `mongo:8.0` (upstream) | ClusterIP `:27017` | Deployment + **static PV pinned to `/mnt/data/mongodb`** (the node's data disk) — data survives a re-provision |
 
 Service discovery is pure Kubernetes DNS: the frontend talks to `http://backend:3000`,
 the backend talks to `mongodb://…@mongodb:27017`.
