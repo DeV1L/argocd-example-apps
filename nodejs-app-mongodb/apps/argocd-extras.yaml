@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/DeV1L/argocd-example-apps
     targetRevision: irrisketch-demo
-    path: argocd-extras
+    path: nodejs-app-mongodb/argocd-extras
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

@@ -22,18 +22,25 @@ the backend talks to `mongodb://…@mongodb:27017`.
 
 ## Layout
 
+Everything for this example lives under this one folder:
+
 ```
 nodejs-app-mongodb/
-├── src/                 # build contexts for the two custom images (not synced by ArgoCD)
-│   ├── frontend/        # server.js, package.json, public/, Dockerfile
-│   └── backend/         # server.js, package.json, Dockerfile
-└── manifests/           # what ArgoCD deploys (namespace nodejs-app-mongodb)
-    ├── mongodb.yaml
-    ├── backend.yaml
-    └── frontend.yaml
+├── apps/                # app-of-apps target (ARGOCD_APP_PATH = nodejs-app-mongodb/apps)
+│   ├── nodejs-app-mongodb.yaml   # Application → nodejs-app-mongodb/manifests
+│   └── argocd-extras.yaml        # Application → nodejs-app-mongodb/argocd-extras
+├── manifests/           # the app ArgoCD deploys (namespace nodejs-app-mongodb)
+│   ├── mongodb.yaml
+│   ├── backend.yaml
+│   └── frontend.yaml
+├── argocd-extras/       # NodePort Service exposing the ArgoCD UI (:30080)
+│   └── argocd-server-nodeport.yaml
+└── src/                 # build contexts for the two custom images (not synced by ArgoCD)
+    ├── frontend/        # server.js, package.json, public/, Dockerfile
+    └── backend/         # server.js, package.json, Dockerfile
 ```
 
-The ArgoCD `Application` for this app is `apps/nodejs-app-mongodb.yaml` (app-of-apps).
+The cluster bootstrap points ArgoCD at `nodejs-app-mongodb/apps` (app-of-apps).
 
 ## Building the images (manual — no CI)
 
