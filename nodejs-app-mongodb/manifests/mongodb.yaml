@@ -1,5 +1,8 @@
-# MongoDB tier — headless Service + single-replica StatefulSet with a local-path PVC.
-# Reachable in-cluster at mongodb:27017 (ClusterIP only; never exposed externally).
+# MongoDB tier. Data is stored on the node's SECOND disk via a static PV pinned to a
+# FIXED host path (/mnt/data/mongodb). Durantic reimages only the system disk on a
+# re-provision, and this path is reused every rebuild (a dynamic local-path PVC would
+# get a new directory each time), so the data survives. Reachable in-cluster at
+# mongodb:27017 (never exposed externally).
 apiVersion: v1
 kind: Secret
 metadata:
@@ -19,7 +22,6 @@ metadata:
   labels:
     app: mongodb
 spec:
-  clusterIP: None
   selector:
     app: mongodb
   ports:
@@ -27,13 +29,44 @@ spec:
       port: 27017
       targetPort: 27017
 ---
+# Static PV pinned to the data-disk path. Retain + claimRef so the same PVC always
+# rebinds to the same directory across cluster rebuilds.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-data
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /mnt/data/mongodb
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: nodejs-app-mongodb
+    name: mongodb-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-data
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: manual
+  resources:
+    requests:
+      storage: 2Gi
+---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: mongodb
 spec:
-  serviceName: mongodb
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mongodb
@@ -76,12 +109,7 @@ spec:
             requests:
               cpu: 100m
               memory: 256Mi
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        storageClassName: local-path
-        resources:
-          requests:
-            storage: 1Gi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mongodb-data
