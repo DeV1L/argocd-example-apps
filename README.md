@@ -28,6 +28,22 @@ Same as `whoami` but configured for clusters using NGINX Ingress Controller.
 - **Replicas**: 2
 - **Ingress**: Catch-all rule on `/` with `ingressClassName: nginx`
 
+### whoami-gateway
+
+Same as `whoami` but exposed through Gateway API instead of Ingress. Built for the [k8s-baremetal-lab](https://github.com/DeV1L/k8s-baremetal-lab) cluster: the `HTTPRoute` attaches to a `Gateway` named `lab-gateway` in the `default` namespace and serves `whoami.lab.local`.
+
+- **Image**: [traefik/whoami](https://hub.docker.com/r/traefik/whoami)
+- **Replicas**: 2
+- **Routing**: `HTTPRoute` for `whoami.lab.local` -> `lab-gateway` (`default` namespace)
+
+### nfs-shared-demo
+
+A writer and a reader Deployment sharing one `ReadWriteMany` PVC on the `nfs-csi` StorageClass. Pod anti-affinity keeps them on different nodes, so the reader tails lines the writer appends from another machine.
+
+- **Image**: busybox
+- **Storage**: `ReadWriteMany` PVC `shared-log` on `nfs-csi`
+- **Verify**: `kubectl -n <namespace> logs deploy/reader --tail=5`
+
 
 #### Verify
 

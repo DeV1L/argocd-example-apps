@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: writer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: writer
+  template:
+    metadata:
+      labels:
+        app: writer
+        demo: nfs-shared
+    spec:
+      containers:
+        - name: writer
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - 'while true; do echo "$(hostname) on $NODE_NAME at $(date)" >> /data/shared.log; sleep 10; done'
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: shared
+              mountPath: /data
+      volumes:
+        - name: shared
+          persistentVolumeClaim:
+            claimName: shared-log
