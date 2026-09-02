@@ -26,7 +26,7 @@ spec:
           command:
             - sh
             - -c
-            - 'touch /data/shared.log; tail -f /data/shared.log'
+            - 'until [ -f /data/shared.log ]; do sleep 2; done; tail -f /data/shared.log'
           volumeMounts:
             - name: shared
               mountPath: /data
