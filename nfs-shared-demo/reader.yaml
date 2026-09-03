@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reader
+  template:
+    metadata:
+      labels:
+        app: reader
+        demo: nfs-shared
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: writer
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: reader
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - 'until [ -f /data/shared.log ]; do sleep 2; done; tail -f /data/shared.log'
+          volumeMounts:
+            - name: shared
+              mountPath: /data
+              readOnly: true
+      volumes:
+        - name: shared
+          persistentVolumeClaim:
+            claimName: shared-log
